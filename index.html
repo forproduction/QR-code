@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<h3>Scan QR</h3>
+
+<div id="reader" style="width:300px;"></div>
+
+<input id="bagId" placeholder="Bag ID"><br><br>
+
+<script>
+function onScanSuccess(decodedText) {
+  document.getElementById("bagId").value = decodedText;
+}
+
+const html5QrCode = new Html5Qrcode("reader");
+html5QrCode.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 },
+  onScanSuccess
+);
+</script>
+
+</body>
+</html>
