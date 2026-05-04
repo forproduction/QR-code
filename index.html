@@ -313,6 +313,7 @@
       cursor: pointer;
       transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
       text-transform: uppercase;
+      margin-bottom: 12px;
     }
 
     #submit-btn:hover {
@@ -321,11 +322,6 @@
     }
 
     #submit-btn:active { transform: scale(0.98); }
-
-    #submit-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
 
     /* ===== STATUS TOAST ===== */
     #toast {
@@ -457,14 +453,15 @@
 <div id="toast"></div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxcb6Oet6CAJl1lH1vVqat4rFEcKDatjDdmMOKax5W6e_HQo1xXBJlIT83DvTaBQ6dgTg/exec";
+  // ===== ⚠️ THAY ĐỔI URL NÀY BẰNG URL DEPLOY CỦA IMPORT GAS =====
+  const API_URL = "https://script.google.com/macros/s/AKfycby1DItjoJ8ksOfoNcHzd-K-LtzWCOakGZQLjVMYobjrQiBMW8ua_0c0vVrVuzUfTR1whg/exec";
   
   let scanner;
   let isScanning = false;
   let queue = [];
   let isSending = false;
 
-  // Real-time clock
+  // ===== DATETIME UPDATE =====
   function updateDateTime() {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('vi-VN');
@@ -477,7 +474,7 @@
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // Toggle scan
+  // ===== TOGGLE SCAN =====
   function toggleScan() {
     if (isScanning) {
       stopScan();
@@ -522,7 +519,7 @@
     }
   }
 
-  // Toast notification
+  // ===== TOAST NOTIFICATION =====
   function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -532,13 +529,13 @@
     }, 3000);
   }
 
-  // ================== QUEUE & LOCAL STORAGE ==================
+  // ===== LOCAL STORAGE QUEUE =====
   function saveQueue() {
-    localStorage.setItem("frp_bagging_queue", JSON.stringify(queue));
+    localStorage.setItem("frp_import_queue", JSON.stringify(queue));
   }
 
   function loadQueue() {
-    const q = localStorage.getItem("frp_bagging_queue");
+    const q = localStorage.getItem("frp_import_queue");
     if (q) queue = JSON.parse(q);
   }
 
@@ -552,7 +549,7 @@
     }
   }
 
-  // ================== SUBMIT LOGIC ==================
+  // ===== SUBMIT DATA =====
   function submitData() {
     const product = document.getElementById("product").value;
     const net = document.getElementById("net").value;
@@ -571,13 +568,13 @@
       emp
     };
 
-    // Đẩy vào hàng đợi và lưu
     queue.push(data);
     saveQueue();
     updateStatus();
 
-    // Xoá nhanh form -> không cần chờ gửi thành công
     showToast('✓ Đã lưu vào hàng đợi!', 'success');
+    
+    // Reset form
     document.getElementById("net").value = "";
     document.getElementById("reason").selectedIndex = 0;
     document.getElementById("product").value = "";
@@ -585,11 +582,10 @@
     display.textContent = 'Chưa quét mã QR...';
     display.classList.add('empty');
 
-    // Chạy tiến trình gửi ngầm
     processQueue();
   }
 
-  // ================== BACKGROUND SEND ==================
+  // ===== BACKGROUND QUEUE PROCESSING =====
   async function processQueue() {
     if (isSending) return;
     isSending = true;
@@ -613,8 +609,7 @@
 
       } catch (err) {
         console.error("Lỗi mạng/gửi dữ liệu:", err);
-        // Ngừng vòng lặp nếu lỗi để thử lại sau
-        break; 
+        break;
       }
     }
 
@@ -623,16 +618,14 @@
     dot.style.boxShadow = "0 0 8px var(--accent2)";
   }
 
-  // ================== INIT ==================
+  // ===== INIT =====
   window.onload = () => {
     loadQueue();
     updateStatus();
     processQueue();
 
-    // Lắng nghe sự kiện có mạng trở lại để tiếp tục gửi queue
     window.addEventListener('online', processQueue);
 
-    // Chu kỳ retry gửi lại dữ liệu nếu còn queue (10s 1 lần)
     setInterval(() => {
       if (queue.length > 0 && navigator.onLine) {
         processQueue();
